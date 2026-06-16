@@ -2,6 +2,7 @@ package menufact.facture;
 
 import ingredients.IngredientInventaire;
 import inventaire.Inventaire;
+import inventaire.InventaireService;
 import menufact.facture.exceptions.FactureException;
 import menufact.plats.PlatChoisi;
 
@@ -16,16 +17,26 @@ public class Ouverte implements FactureEtat {
     @Override
     public void ajoutePlat(Facture facture, PlatChoisi p) throws FactureException {
 
-        Inventaire inventaire = Inventaire.getInstance();
+
+
+
+
+
+
+
+
+
+
+        InventaireService inventaire = InventaireService.getInstance();
 
         ArrayList<IngredientInventaire> recette = p.getPlat().getRecette();
 
-        if (!inventaire.verifierDisponibilite(recette)) {
+        if (!inventaire.verifierDisponibiliteIngredient(recette)) {
             throw new FactureException("Ajout refusé : Ingrédients insuffisants en inventaire.");
         }
 
         try {
-            inventaire.consommerIngredients(recette);
+            inventaire.verifierDisponibiliteIngredient(recette);
         } catch (Exception e) {
             throw new FactureException("Erreur lors de la consommation des stocks.");
         }

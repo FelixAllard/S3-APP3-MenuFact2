@@ -192,4 +192,32 @@ public class Facture {
                 ", TVQ=" + TVQ +
                 '}';
     }
+
+    public String genererFacture()
+    {
+        String lesPlats = new String();
+        String factureGenere = new String();
+
+        int i =1;
+
+
+        factureGenere =   "Facture generee.\n" +
+                "Date:" + date + "\n" +
+                "Description: " + description + "\n" +
+                "Client:" + client.getNom() + "\n" +
+                "Les plats commandes:" + "\n" + lesPlats;
+
+        factureGenere += "Seq   Plat         Prix   Quantite\n";
+        for (PlatChoisi plat : platchoisi)
+        {
+            factureGenere +=  i + "     " + plat.getPlat().getDescription() +  "  " + plat.getPlat().getPrix() +  "      " + plat.getQuantite() + "\n";
+            i++;
+        }
+
+        factureGenere += "          TPS:               " + tps() + "\n";
+        factureGenere += "          TVQ:               " + tvq() + "\n";
+        factureGenere += "          Le total est de:   " + total() + "\n";
+
+        return factureGenere;
+    }
 }
