@@ -68,10 +68,10 @@ public class TestMenuFact02 {
             System.out.println(e.getMessage());
         }
 
-        t.test10_ValidationSingletonInventaire();
+        t.test10_VerifierSingletonInventaire();
 
         try {
-            t.test11_ValidationCompositionEtStocks(p1, pe1);
+            t.test11_VerifierCompositionEtInventaire(p1, pe1);
         } catch (Exception e) {
             System.out.println("Erreur durant test11: " + e.getMessage());
         }
@@ -87,9 +87,9 @@ public class TestMenuFact02 {
             System.out.println(e.getMessage());
         }
 
-        t.test12_VerificationEtatsState(f2);
-        t.test13_VerificationEtatsPlatEtChef(p1);
-        t.test14_ValidationFacade(c1, m1);
+        t.test12_VerifierTransitionsFacture(f2);
+        t.test13_VerifierObserverEtEtats(p1);
+        t.test14_VerifierFacade(c1, m1);
 
         try {
             t.test9_PayerFacture(f2);
@@ -274,125 +274,179 @@ public class TestMenuFact02 {
         f1.fermer();
         f1.payer();
     }
-    private void test10_ValidationSingletonInventaire() {
-        System.out.println("=== test10_ValidationSingletonInventaire");
-        InventaireService i1 = InventaireService.getInstance();
-        InventaireService i2 = InventaireService.getInstance();
-        if (i1 == i2) {
-            System.out.println("SUCCÈS : Les deux sont la même reference");
-        } else {
-            System.out.println("ÉCHEC : Le Singleton a généré deux instances distinctes !");
-        }
+    private void test10_VerifierSingletonInventaire() {
+        System.out.println("=== test10_VerifierSingletonInventaire");
 
+        InventaireService premiereInstance = InventaireService.getInstance();
+        InventaireService deuxiemeInstance = InventaireService.getInstance();
+
+        boolean memeObjet = premiereInstance == deuxiemeInstance;
+
+        System.out.println(
+                memeObjet
+                        ? "SUCCÈS : Une seule instance du service existe."
+                        : "ÉCHEC : Plusieurs instances du Singleton ont été créées."
+        );
     }
-    private final Ingredient fruitBanane = new Fruit("Banane");
-    private final Ingredient laitierLait = new Laitier("lait");
+    private final Ingredient ingredientBanane = new Fruit("Banane");
+    private final Ingredient ingredientLait = new Laitier("lait");
 
-    private void test11_ValidationCompositionEtStocks(PlatAuMenu platValide, PlatAuMenu platInvalide) throws Exception {
-        System.out.println("=== test11_ValidationCompositionEtStocks");
-        InventaireService stock = InventaireService.getInstance();
-        stock.ajouterIngredientInventaire(new IngredientInventaire(this.fruitBanane, 5));
-        stock.ajouterIngredientInventaire(new IngredientInventaire(this.laitierLait, 0));
+    private void test11_VerifierCompositionEtInventaire(
+            PlatAuMenu platDisponible,
+            PlatAuMenu platSansStock) throws Exception {
 
+        System.out.println("=== test11_VerifierCompositionEtInventaire");
 
-        platValide.ajouterIngredientRecette(this.fruitBanane, 2);
-        platInvalide.ajouterIngredientRecette(this.laitierLait, 1);
-        Facture fTest = new Facture("Facture Test Stocks");
+        InventaireService inventaire = InventaireService.getInstance();
+
+        inventaire.ajouterIngredientInventaire(
+                new IngredientInventaire(ingredientBanane, 5));
+
+        inventaire.ajouterIngredientInventaire(
+                new IngredientInventaire(ingredientLait, 0));
+
+        platDisponible.ajouterIngredientRecette(ingredientBanane, 2);
+        platSansStock.ajouterIngredientRecette(ingredientLait, 1);
+
+        Facture facture = new Facture("Validation Inventaire");
 
         try {
-            fTest.ajoutePlat(new PlatChoisi(platValide, 1));
-            System.out.println("SUCCÈS : Le plat contenant du Boeuf a été accepté (Assez de stock).");
-        } catch (FactureException var7) {
-            System.out.println("ÉCHEC : Le plat valide a été rejeté indûment.");
-        }
-
-        try {
-            fTest.ajoutePlat(new PlatChoisi(platInvalide, 1));
-            System.out.println("ÉCHEC : Le système a accepté d'ajouter un plat alors qu'il n'y a pas d'ingrédients !");
+            facture.ajoutePlat(new PlatChoisi(platDisponible, 1));
+            System.out.println(
+                    "SUCCÈS : Le plat avec ingrédients disponibles a été ajouté.");
         } catch (FactureException e) {
-            System.out.println("SUCCÈS ATTENDU : L'ajout a été bloqué correctement : " + e.getMessage());
+            System.out.println(
+                    "ÉCHEC : Le système a refusé un plat pourtant valide.");
         }
-
-    }
-
-    private void test12_VerificationEtatsState(Facture f) {
-        System.out.println("=== test12_VerificationEtatsState");
 
         try {
-            System.out.println("Tentative illégale de payer une facture ouverte...");
-            f.payer();
-            System.out.println("ÉCHEC : La facture ouverte a accepté le paiement sans être fermée.");
+            facture.ajoutePlat(new PlatChoisi(platSansStock, 1));
+            System.out.println(
+                    "ÉCHEC : Le système a accepté un plat sans stock.");
         } catch (FactureException e) {
-            System.out.println("SUCCÈS ATTENDU : Le pattern State a bloqué le paiement direct. Raison : " + e.getMessage());
+            System.out.println(
+                    "SUCCÈS ATTENDU : Ajout refusé -> " + e.getMessage());
         }
-
     }
 
-    private void test13_VerificationEtatsPlatEtChef(PlatAuMenu plat) {
-        System.out.println("=== test13_VerificationEtatsPlatEtChef");
+    private void test12_VerifierTransitionsFacture(Facture facture) {
+        System.out.println("=== test12_VerifierTransitionsFacture");
+
+        try {
+            System.out.println("Paiement d'une facture non fermée...");
+            facture.payer();
+
+            System.out.println(
+                    "ÉCHEC : Le paiement a été autorisé alors qu'il ne devait pas l'être.");
+
+        } catch (FactureException e) {
+
+            System.out.println(
+                    "SUCCÈS ATTENDU : Transition interdite détectée : "
+                            + e.getMessage());
+        }
+    }
+
+    private void test13_VerifierObserverEtEtats(PlatAuMenu plat) {
+
+        System.out.println("=== test13_VerifierObserverEtEtats");
+
         plat.getRecette().clear();
-        Facture fCuisine = new Facture("Suivi Cuisine");
-        Chef chefCuisine = new Chef("Bob");
-        fCuisine.attacher(chefCuisine);
-        PlatChoisi pc = new PlatChoisi(plat, 2);
-        System.out.println("État à l'envoi de la commande : " + pc.getEtat().getNom());
-        if (pc.getEtat() instanceof Commande) {
-            System.out.println("SUCCÈS : L'état initial est bien 'Commandé'.");
+
+        Facture facture = new Facture("Cuisine");
+        Chef chef = new Chef("Bob");
+
+        facture.attacher(chef);
+
+        PlatChoisi commande = new PlatChoisi(plat, 2);
+
+        System.out.println("État initial : " + commande.getEtat().getNom());
+
+        if (commande.getEtat() instanceof Commande) {
+            System.out.println("SUCCÈS : Le plat commence bien à l'état Commandé.");
         } else {
-            System.out.println("ÉCHEC : L'état initial est incorrect.");
+            System.out.println("ÉCHEC : Mauvais état initial.");
         }
 
         try {
-            fCuisine.ajoutePlat(pc);
+            facture.ajoutePlat(commande);
         } catch (FactureException e) {
-            System.out.println("Erreur imprévue : " + e.getMessage());
+            System.out.println("Erreur inattendue : " + e.getMessage());
         }
 
-        System.out.println("Étape Cuisine 1 (Après notification) : " + pc.getEtat().getNom());
-        if (pc.getEtat() instanceof EnPreparation) {
-            System.out.println("SUCCÈS : Le Chef (Observer) a intercepté la facture et mis le plat 'En préparation' !");
-        } else {
-            System.out.println("ÉCHEC : L'Observer n'a pas changé l'état automatiquement.");
-        }
+        System.out.println("Après notification du chef : "
+                + commande.getEtat().getNom());
 
-        pc.avancerEtat();
-        System.out.println("Étape Cuisine 2 : " + pc.getEtat().getNom());
-        pc.avancerEtat();
-        System.out.println("Étape Cuisine 3 : " + pc.getEtat().getNom());
-        System.out.println("Vérification de l'état d'erreur de stock...");
-        pc.setEtat(new ImpossibleServir());
-        System.out.println("Statut critique : " + pc.getEtat().getNom());
+        boolean estEnPreparation =
+                commande.getEtat() instanceof EnPreparation;
+
+        System.out.println(
+                estEnPreparation
+                        ? "SUCCÈS : L'observer a modifié l'état."
+                        : "ÉCHEC : L'observer n'a rien fait."
+        );
+
+        commande.avancerEtat();
+        System.out.println("Nouvel état : " + commande.getEtat().getNom());
+
+        commande.avancerEtat();
+        System.out.println("Nouvel état : " + commande.getEtat().getNom());
+
+        commande.setEtat(new ImpossibleServir());
+
+        System.out.println(
+                "État forcé (rupture de stock) : "
+                        + commande.getEtat().getNom());
     }
 
-    private void test14_ValidationFacade(Client client, Menu menu) {
-        System.out.println("=== test14_ValidationFacade");
+    private void test14_VerifierFacade(Client client, Menu menu) {
+
+        System.out.println("=== test14_VerifierFacade");
 
         try {
-            InventaireService.getInstance().ajouterIngredientInventaire(new IngredientInventaire(this.fruitBanane, 50));
+            InventaireService.getInstance()
+                    .ajouterIngredientInventaire(
+                            new IngredientInventaire(ingredientBanane, 50));
         } catch (Exception e) {
-            System.out.println("Erreur lors de l'ajout des ingrédients: " + e.getMessage());
+            System.out.println("Impossible d'alimenter l'inventaire : "
+                    + e.getMessage());
         }
 
         MenuFactFacade facade = new MenuFactFacade();
-        Facture fFacade = facade.preparerNouvelleFacture(client, menu);
-        System.out.println("Vérification de la facture créée par la Façade...");
-        if (fFacade != null && fFacade.getClient() == client) {
-            System.out.println("SUCCÈS : La Façade a correctement initialisé la facture et associé le client.");
+
+        Facture facture = facade.preparerNouvelleFacture(client, menu);
+
+        boolean factureValide =
+                facture != null && facture.getClient() == client;
+
+        if (factureValide) {
+            System.out.println(
+                    "SUCCÈS : La façade a créé et configuré la facture.");
         } else {
-            System.out.println("ÉCHEC : La Façade n'a pas configuré la facture correctement.");
+            System.out.println(
+                    "ÉCHEC : La facture retournée n'est pas valide.");
         }
 
         try {
-            PlatChoisi pc = new PlatChoisi(menu.platCourant(), 1);
-            fFacade.ajoutePlat(pc);
-            if (pc.getEtat() instanceof EnPreparation) {
-                System.out.println("SUCCÈS : L'Observer (Chef) configuré par la Façade fonctionne automatiquement lors de l'ajout.");
-            } else {
-                System.out.println("ÉCHEC : Le Chef attaché par la Façade n'a pas intercepté le plat.");
-            }
-        } catch (Exception e) {
-            System.out.println("Erreur lors de la validation du plat via la Façade : " + e.getMessage());
-        }
 
+            PlatChoisi choix =
+                    new PlatChoisi(menu.platCourant(), 1);
+
+            facture.ajoutePlat(choix);
+
+            if (choix.getEtat() instanceof EnPreparation) {
+                System.out.println(
+                        "SUCCÈS : Le chef enregistré par la façade est actif.");
+            } else {
+                System.out.println(
+                        "ÉCHEC : Aucun changement d'état détecté.");
+            }
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "Erreur lors du test de la façade : "
+                            + e.getMessage());
+        }
     }
 }
