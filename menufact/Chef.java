@@ -4,6 +4,7 @@ import menufact.facture.FactureObserver;
 
 import menufact.plats.Etat.EnPreparation;
 import menufact.plats.PlatChoisi;
+import org.jspecify.annotations.NonNull;
 
 public class Chef implements FactureObserver {
     private String nom;
@@ -13,8 +14,9 @@ public class Chef implements FactureObserver {
     }
 
 
+
     @Override
-    public void mettreAJour(PlatChoisi plat) {
+    public void mettreAJour(@NonNull PlatChoisi plat) {
         System.out.println("[CUISINE - " + nom + "] Préparation demandée pour : "
                 + plat.getPlat().getDescription() + " (Qté: " + plat.getQuantite() + ")");
 
