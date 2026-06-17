@@ -8,12 +8,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Classe gérant l'instance unique de l'inventaire (singleton)
+ *
+ */
 public class InventaireService {
+
+    /** Instance unique de InventaireService. */
     private static InventaireService instance;
+
+    /** Liste de l'inventaire de chaque ingrédient dans l'inventaire. */
     private List<IngredientInventaire> ingredient = new ArrayList<IngredientInventaire>();
 
+    /** Constructeur privé de l'objet InventaireService. */
     private InventaireService(){}
 
+    /**
+     * Obtenir l'instance courante si elle existe : la crée si elle n'existe pas.
+     */
     public static InventaireService getInstance(){
         if(instance == null){
             instance = new InventaireService();
@@ -21,6 +33,16 @@ public class InventaireService {
         return instance;
     }
 
+    /**
+     * Ajoute l'inventaire d'un ingrédient si elle n'existe pas, sinon ajoute à la quantité.
+     *
+     * <p>
+     *     Vérifie si l'inventaire de l'ingrédient est déjà dans la liste, ajoute à la quantité
+     *     s'il est déjà dedans et l'ajoute si ce n'est pas le cas.
+     * </p>
+     * @param ingredientInventaire l'inventaire de l'ingrédient à ajouter.
+     * @throws RuntimeException si ça prend trop longtemps.
+     */
     public void ajouterIngredientInventaire(IngredientInventaire ingredientInventaire) {
 
         Optional<IngredientInventaire> existant = ingredient.stream()
@@ -42,6 +64,17 @@ public class InventaireService {
             ingredient.add(ingredientInventaire);
         }
     }
+
+    /**
+     * Vérifie s'il a assez d'ingrédient dans l'inventaire pour un ingrédient
+     *
+     * <p>
+     *     Par exemple, s'assurer que la quantité d'un certain ingrédient pour un plat est suffisante dans l'inventaire.
+     * </p>
+     *
+     * @param ingredientInventaire l'inventaire de l'ingrédient qu'on veut vérifier
+     * @return oui/non s'il a assez d'un ingrédient dans l'inventaire.
+     */
     public boolean verifierDisponibiliteIngredient(IngredientInventaire ingredientInventaire){
         return ingredient.stream()
                 .anyMatch(i ->
@@ -51,6 +84,18 @@ public class InventaireService {
                                 i.getQuantite() >= ingredientInventaire.getQuantite()
                 );
     }
+
+    /**
+     * Vérifie la quantité d'une liste d'ingrédients dans l'inventaire
+     *
+     * <p>
+     *     Par exemple, vérifie si toute la liste d'ingrédient est en quantité suffisante pour être en
+     *     de prépaper un plat.
+     * </p>
+     *
+     * @param ingredientsInventaire liste de la quantité d'ingrédients à vérifier dans l'inventaire.
+     * @return oui/non s'il y a assez d'ingrédients dans l'inventaire.
+     */
     public boolean verifierDisponibiliteIngredient(List<IngredientInventaire> ingredientsInventaire){
 
 
@@ -65,8 +110,20 @@ public class InventaireService {
                 return false;
         }
         return true;
-
     }
+
+    /**
+     * Utilisation d'ingrédients dans l'inventaire
+     *
+     * <p>
+     *     Par exemple, la préparation d'un plat va utiliser des ingrédients.
+     *     On va alors retirer la quantité d'ingrédients utilisés dans l'inventaire.
+     * </p>
+     *
+     * @param ingredientsInventaire La liste d'ingrédients qu'on demande de consommer
+     * @throws IllegalStateException s'il n'a pas assez d'ingrédients dans l'inventaire.
+     * @throws RuntimeException si l'exécution prend trop de temps.
+     */
     public void consommerIngredientInventaire(List<IngredientInventaire> ingredientsInventaire) {
 
         if (!verifierDisponibiliteIngredient(ingredientsInventaire)) {
