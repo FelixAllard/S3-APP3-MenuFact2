@@ -3,7 +3,16 @@ package menufact.presentation;
 import menufact.facture.Facture;
 import menufact.plats.PlatChoisi;
 
+/**
+ * Classe qui est la vue du système
+ */
 public class FactureView {
+
+    /**
+     * Génère l'affichage de la facture en texte
+     * @param facture la facture à afficher
+     * @return l'affichage de la facture en texte
+     */
     public String genererFactureTexte(Facture facture) {
         String factureGenere = "";
         int i = 1;
