@@ -12,6 +12,7 @@ public class Chef implements FactureObserver {
         this.nom = nom;
     }
 
+
     @Override
     public void mettreAJour(PlatChoisi plat) {
         System.out.println("[CUISINE - " + nom + "] Préparation demandée pour : "
