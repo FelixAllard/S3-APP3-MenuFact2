@@ -12,4 +12,11 @@ public class Inventaire {
         lesIngredients.add(ingredient);
     }
 
+    public int size() {
+        return  lesIngredients.size();
+    }
+
+    public Ingredient get(int index) {
+        return lesIngredients.get(index);
+    }
 }
